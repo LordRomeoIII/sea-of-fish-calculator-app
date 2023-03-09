@@ -1,7 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import { Button, Container, Form, InputGroup, Row, Col } from 'react-bootstrap';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function parseTime(timeSeconds) {
   let _seconds = timeSeconds % 60;
@@ -25,79 +25,76 @@ function parseTime(timeSeconds) {
   return _parsedTime ? _parsedTime : "0 seconds"
 }
 
-function updateTotalTime() {
-  let _items = document.getElementsByName('cookable-items')
-
-  let _totalTime = 0
-  _items.forEach(element => {
-    let _value = +element.value
-    let _time = +element.getAttribute('time')
-    _totalTime += _value * _time
-  });
-
-  return _totalTime
-}
-
-function resetCookableItems() {
-  let _items = document.getElementsByName('cookable-items')
-
-  _items.forEach(element => {
-    element.value = 0
-  });
-}
-
 function InputCookable(props) {
-  function modifyInput(id, increment) {
-    let _inputElement = document.getElementById(id)
-    let _currentValue = +_inputElement.value
-    _inputElement.value = Math.max(_currentValue + increment, 0)
+  let {
+    id,
+    name,
+    time,
+    values,
+    onUpdate,
+    description
+  } = props
+
+  
+  function inputChangeValidation(event) {
+    let { value } = event.target
+    let cleanValue = value.replace(/\D/g, '').replace(/^0+/, '')
+    cleanValue = cleanValue ? +cleanValue : 0
+    onUpdate({ ...values, [id]: cleanValue})
+    
+    // let numericRegex = /^\d+$/
+    // if (value === '' || numericRegex.test(value)) {
+    //   // setErrorMessage('')
+    // } else {
+    //   // setErrorMessage('MESSAGE')
+    //   console.log("Invalid input.")
+    // }
   }
 
   return (
     <Form.Group>
-      <Form.Label>{props.name}</Form.Label>
+      <Form.Label>{ name }</Form.Label>
       <InputGroup>
         <Button
           variant='outline-danger'
-          onClick={() => {
-            modifyInput(props.id, -5)
-            props.onChange(updateTotalTime())
-          }}>-5</Button>
+          onClick={ () => onUpdate({ ...values, [id]: Math.max(0, values[id] - 5 )}) }
+        >
+          -5
+        </Button>
 
         <Button
           variant='outline-danger'
-          onClick={() => {
-            modifyInput(props.id, -1)
-            props.onChange(updateTotalTime())
-          }}>-1</Button>
-
+          onClick={ () => onUpdate({ ...values, [id]: Math.max(0, values[id] - 1 )}) }
+        >
+          -1
+        </Button>
+        
         <Form.Control
           type='text'
-          defaultValue='0'
-          id={props.id}
+          value={ values[id] }
+          id={ id }
           className='text-center'
           name='cookable-items'
-          time={props.time}
-          onChange={() => props.onChange(updateTotalTime())}
+          time={ time }
+          onChange={ inputChangeValidation }
         />
 
         <Button
           variant='outline-success'
-          onClick={() => {
-            modifyInput(props.id, 1)
-            props.onChange(updateTotalTime())
-          }}>+1</Button>
-
+          onClick={ () => onUpdate({ ...values, [id]: values[id] + 1 }) }
+        >
+          +1
+        </Button>
         <Button
           variant='outline-success'
-          onClick={() => {
-            modifyInput(props.id, 5)
-            props.onChange(updateTotalTime())
-          }}>+5</Button>
+          onClick={ () => onUpdate({ ...values, [id]: values[id] + 5 }) }
+        >
+          +5
+        </Button>
 
       </InputGroup>
       <Form.Text>
-        { props.description }
+        { description }
       </Form.Text>
     </Form.Group>
   )
@@ -105,6 +102,39 @@ function InputCookable(props) {
 
 function App() {
   const [totalTime, setTotalTime] = useState(0)
+  // TODO: Include time in this object instead of hacking it as a property on the inputs.
+  const [inputsValue, setInputsValue] = useState({
+    "regular-fish": 0,
+    "trophy-fish": 0,
+    "regular-meat": 0,
+    "beast-meat": 0,
+  })
+
+  function resetCookableItems() {
+    let newValues = {...inputsValue}
+    for (const property in newValues) {
+      newValues[property] = 0;
+    }
+    setInputsValue(newValues)
+  }
+
+  function updateTotalTime() {
+    let _items = document.getElementsByName('cookable-items')
+    
+    let _totalTime = 0
+    _items.forEach(element => {
+      let _value = +element.value
+      let _time = +element.getAttribute('time')
+      _totalTime += _value * _time
+    });
+  
+    setTotalTime(_totalTime)
+  }
+
+  useEffect(() => {
+    updateTotalTime()
+  }, [inputsValue])
+
   return (
     <Container className='p-3'>
       <Container className='p-5 mb-4 text-bg-dark rounded-3'>
@@ -119,7 +149,8 @@ function App() {
                 name="Regular Fish"
                 id="regular-fish"
                 time="40"
-                onChange={ setTotalTime }
+                values={ inputsValue }
+                onUpdate={ setInputsValue }
                 description="The most common size of fish."
               />
             </Col>
@@ -128,7 +159,8 @@ function App() {
                 name="Trophy Fish"
                 id="trophy-fish"
                 time="90"
-                onChange={ setTotalTime }
+                values={ inputsValue }
+                onUpdate={ setInputsValue }
                 description="Bigger fish that takes longer to cook but sells for a higher price."
               />
             </Col>
@@ -139,7 +171,8 @@ function App() {
                 name="Animal Meat"
                 id="regular-meat"
                 time="60"
-                onChange={ setTotalTime }
+                values={ inputsValue }
+                onUpdate={ setInputsValue }
                 description="This includes meat from Pigs, Snakes, Chickens, and Sharks."
               />
             </Col>
@@ -148,13 +181,14 @@ function App() {
                 name="Beast Meat"
                 id="beast-meat"
                 time="120"
-                onChange={ setTotalTime }
+                values={ inputsValue }
+                onUpdate={ setInputsValue }
                 description="This includes meat from Megalodons and the Kraken."
               />
             </Col>
           </Row>
           <div className="d-grid gap-2">
-            <Button onClick={() => { resetCookableItems(); setTotalTime(0) }} className="my-3" variant="danger">Reset</Button>
+            <Button onClick={ resetCookableItems } className="my-3" variant="danger">Reset</Button>
           </div>
         </Form>
       </Container>
