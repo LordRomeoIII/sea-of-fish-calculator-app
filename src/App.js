@@ -102,6 +102,7 @@ function InputCookable(props) {
 
 function App() {
   const [totalTime, setTotalTime] = useState(0)
+  const [totalFish, setTotalFish] = useState(0)
   // TODO: Include time in this object instead of hacking it as a property on the inputs.
   const [inputsValue, setInputsValue] = useState({
     "regular-fish": 0,
@@ -132,16 +133,24 @@ function App() {
   }
 
   useEffect(() => {
+    function updateTotalFish() {
+      setTotalFish(inputsValue['regular-fish'] + inputsValue['trophy-fish'])
+    }
+
     updateTotalTime()
+    updateTotalFish()
   }, [inputsValue])
 
   return (
-    <Container className='p-3'>
-      <Container className='p-5 mb-4 text-bg-dark rounded-3'>
-        <h1 className='header'>Sea of Fish Calculator</h1>
+    <Container className='p-3 main-container'>
+      <Container className='p-4 mb-2 rounded-3 header'>
+        <h1 className='display-1'>Sea of Fish Calculator</h1>
       </Container>
-      <Container>
-        <h2>Current total time: { parseTime(totalTime) }</h2>
+      <Container className='py-3 px-4 mb-2 rounded-3 output border-container'>
+        <h3>Current total time: { parseTime(totalTime) } </h3>
+        <h3 className='my-0'>Current total fish: { totalFish }</h3>
+      </Container>
+      <Container className='p-3 rounded-3 border-container'>
         <Form>
           <Row className='py-2'>
             <Col sm={6}>
@@ -187,11 +196,11 @@ function App() {
               />
             </Col>
           </Row>
-          <div className="d-grid gap-2">
-            <Button onClick={ resetCookableItems } className="my-3" variant="danger">Reset</Button>
-          </div>
         </Form>
       </Container>
+      <div className="d-grid gap-2">
+        <Button onClick={ resetCookableItems } className="my-3" variant="danger">Reset</Button>
+      </div>
     </Container>
   );
 }
