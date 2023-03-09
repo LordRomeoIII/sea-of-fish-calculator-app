@@ -3,28 +3,6 @@ import './App.css';
 import { Button, Container, Form, InputGroup, Row, Col } from 'react-bootstrap';
 import { useEffect, useState } from 'react';
 
-function parseTime(timeSeconds) {
-  let _seconds = timeSeconds % 60;
-  let _minutes = Math.floor(timeSeconds / 60) % 60;
-  let _hours = Math.floor(timeSeconds / 3600);
-
-  let _parsedTime = ""
-
-  if (_hours > 0) {
-    _parsedTime += _hours + (_hours === 1 ? " hour " : " hours ")
-  }
-
-  if ((_minutes > 0) || (_hours !== 0)) {
-    _parsedTime += _minutes + (_minutes === 1 ? " minute " : " minutes ")
-  }
-
-  if (_seconds > 0) {
-    _parsedTime += _seconds + (_seconds === 1 ? " second " : " seconds ")
-  }
-
-  return _parsedTime ? _parsedTime : "0 seconds"
-}
-
 function InputCookable(props) {
   let {
     id,
@@ -103,6 +81,7 @@ function InputCookable(props) {
 function App() {
   const [totalTime, setTotalTime] = useState(0)
   const [totalFish, setTotalFish] = useState(0)
+  const [isAtFortress, setIsAtFortress] = useState(false)
   // TODO: Include time in this object instead of hacking it as a property on the inputs.
   const [inputsValue, setInputsValue] = useState({
     "regular-fish": 0,
@@ -110,6 +89,30 @@ function App() {
     "regular-meat": 0,
     "beast-meat": 0,
   })
+
+  function parseTime(timeSeconds) {
+    let actualTime =  isAtFortress? timeSeconds / 5 : timeSeconds
+  
+    let _seconds = actualTime % 60;
+    let _minutes = Math.floor(actualTime / 60) % 60;
+    let _hours = Math.floor(actualTime / 3600);
+  
+    let _parsedTime = ""
+  
+    if (_hours > 0) {
+      _parsedTime += _hours + (_hours === 1 ? " hour " : " hours ")
+    }
+  
+    if ((_minutes > 0) || (_hours !== 0)) {
+      _parsedTime += _minutes + (_minutes === 1 ? " minute " : " minutes ")
+    }
+  
+    if (_seconds > 0) {
+      _parsedTime += _seconds + (_seconds === 1 ? " second " : " seconds ")
+    }
+
+    return _parsedTime ? _parsedTime : "0 seconds"
+  }
 
   function resetCookableItems() {
     let newValues = {...inputsValue}
@@ -147,8 +150,10 @@ function App() {
         <h1 className='display-1'>Sea of Fish Calculator</h1>
       </Container>
       <Container className='py-3 px-4 mb-2 rounded-3 output border-container'>
-        <h3>Current total time: { parseTime(totalTime) } </h3>
-        <h3 className='my-0'>Current total fish: { totalFish }</h3>
+        <h2 className='my-0'>Current total time{ isAtFortress && " with 5 stoves" }:</h2>
+        <h2 className='lead ms-4'>{ parseTime(totalTime) }</h2>
+        <h2 className='my-0'>Current total fish:</h2>
+        <h2 className='lead ms-4 my-0'>{ totalFish }</h2>
       </Container>
       <Container className='p-3 rounded-3 border-container'>
         <Form>
@@ -193,6 +198,16 @@ function App() {
                 values={ inputsValue }
                 onUpdate={ setInputsValue }
                 description="This includes meat from Megalodons and the Kraken."
+              />
+            </Col>
+          </Row>
+          <Row className="justify-content-center">
+            <Col xs="auto">
+              <Form.Check
+                type="switch"
+                label="Cooking at a Sea Fort"
+                value={ isAtFortress }
+                onClick={ () => setIsAtFortress(!isAtFortress) }
               />
             </Col>
           </Row>
